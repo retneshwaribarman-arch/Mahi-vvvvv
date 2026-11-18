@@ -11,7 +11,7 @@ import java.net.URL
  */
 class GeminiClient {
 
-    private val model = "gemini-2.0-flash"
+    private val model = "gemini-3.8-flash"
 
     fun chat(apiKey: String, userText: String, adult: Boolean): Pair<String, JSONObject?> {
         val url = URL("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent")
