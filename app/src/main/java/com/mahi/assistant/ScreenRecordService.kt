@@ -10,7 +10,7 @@ import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Environment
 import android.os.IBinder
-import android.view.VirtualDisplay
+import android.hardware.display.VirtualDisplay
 import java.io.File
 
 /** MediaProjection diye screen record. Android 14-e FGS type mediaProjection lagbe. */
