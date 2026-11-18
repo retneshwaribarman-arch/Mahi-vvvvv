@@ -14,6 +14,23 @@ class GeminiClient {
     private val model = "gemini-3.8-flash"
 
     fun chat(apiKey: String, userText: String, adult: Boolean): Pair<String, JSONObject?> {
+        var lastError: Exception? = null
+        val delays = longArrayOf(0L, 3000L, 6000L, 12000L)
+
+        for (attempt in delays.indices) {
+            if (delays[attempt] > 0) Thread.sleep(delays[attempt])
+            try {
+                return callOnce(apiKey, userText, adult)
+            } catch (e: RetryableException) {
+                lastError = e
+            }
+        }
+        throw RuntimeException("Gemini ekhon busy, ektu pore abar try koro. (${lastError?.message})")
+    }
+
+    private class RetryableException(msg: String) : RuntimeException(msg)
+
+    private fun callOnce(apiKey: String, userText: String, adult: Boolean): Pair<String, JSONObject?> {
         val url = URL("https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent")
 
         val body = JSONObject()
@@ -46,6 +63,9 @@ class GeminiClient {
         val code = conn.responseCode
         val stream = if (code in 200..299) conn.inputStream else conn.errorStream
         val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+
+        // 429 (rate limit) ar 503 (high demand) temporary, tai retry korbo
+        if (code == 429 || code == 503) throw RetryableException("HTTP $code")
         if (code !in 200..299) throw RuntimeException("HTTP $code ${text.take(160)}")
 
         val raw = JSONObject(text).getJSONArray("candidates").getJSONObject(0)
